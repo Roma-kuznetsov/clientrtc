@@ -5,9 +5,12 @@ import Peer from 'peerjs';
 import { v4 as uuidV4 } from "uuid";
 import { peersReducer } from './peerReducer';
 import { addPeerAction, removePeerAction } from './peerActions';
-
-const WS = 'http://localhost:8080';
-
+let WS;
+if (process.env.NODE_ENV === 'production') {
+  WS = "https://serverrtc-production.up.railway.app"
+}else{
+  WS = 'http://localhost:8080';
+}
 
 export const RoomContext = createContext<null | any>(null);
 

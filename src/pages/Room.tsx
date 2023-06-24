@@ -1,23 +1,53 @@
-import { FC, useContext, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { RoomContext } from "../context/RoomContect";
+import { ShareScreenButton } from "../components/ShareScreenButton"
 import { VideoPlayer } from "../components/VideoPlayer";
 import { PeerState } from "../context/peerReducer";
+import { RoomContext } from "../context/RoomContect"
 
-export const Room: FC = () => {
-  const { id } = useParams()
-  const { ws, me, stream, peers } = useContext(RoomContext)
+export const Room = () => {
+  const { id } = useParams();
+  const { ws, me, stream, peers, shareScreen, screenSharingId, setRoomId } =
+    useContext(RoomContext);
+
   useEffect(() => {
-    console.log(me)
-    if (me) ws.emit("join-room", { roomId: id, peerId: me._id })
-  }, [id, me, ws, stream])
+    if (me) ws.emit("join-room", { roomId: id, peerId: me._id });
+  }, [id, me, ws]);
+
+  useEffect(() => {
+    setRoomId(id);
+  }, [id, setRoomId]);
+
+  console.log({ screenSharingId });
+  const screenSharingVideo =
+    screenSharingId === me?.id ? stream : peers[screenSharingId]?.stream;
+
+  const { [screenSharingId]: sharing, ...peersToShow } = peers;
   return (
     <>
-      <h1>roomID : {id}</h1>
+      Room id {id}
+      <div className="flex">
+        {screenSharingVideo && (
+          <div className="w-4/5 pr-4">
+            <VideoPlayer muted={false} stream={screenSharingVideo} />
+          </div>
+        )}
+        <div
+          className={`grid gap-4 ${screenSharingVideo ? "w-1/5 grid-col-1" : "grid-cols-4"
+            }`}
+        >
+          {screenSharingId !== me?.id && (
+            <VideoPlayer stream={stream} muted={true} />
+          )}
 
-      {Object.values(peers as PeerState).map((peer) => (
-        <div><VideoPlayer stream={peer.stream} /></div>
-      ))}
+          {Object.values(peersToShow as PeerState).map((peer) => (
+            <VideoPlayer stream={peer.stream} muted={false}/>
+          ))}
+        </div>
+      </div>
+      <div className="fixed bottom-0 p-6 w-full flex justify-center border-t-2 bg-white">
+        <ShareScreenButton onClick={shareScreen} />
+      </div>
     </>
   );
 };

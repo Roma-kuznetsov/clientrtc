@@ -6,7 +6,12 @@ import { v4 as uuidV4 } from "uuid";
 import { peersReducer } from "./peerReducer";
 import { addPeerAction, removePeerAction } from "./peerActions";
 
-const WS = "http://localhost:8080";
+let WS;
+if (process.env.NODE_ENV === 'production') {
+  WS = "https://serverrtc-production.up.railway.app";
+} else {
+  WS = "http://localhost:8080";
+}
 
 export const RoomContext = createContext<null | any>(null);
 
@@ -59,7 +64,7 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
         .getUserMedia({ video: false, audio: true })
         .then(switchStream);
     } else {
-    navigator.mediaDevices.getDisplayMedia({}).then(switchStream).catch((err:any) => console.log(err))
+      navigator.mediaDevices.getDisplayMedia({}).then(switchStream).catch((err: any) => console.log(err))
     }
   };
   useEffect(() => {
@@ -106,7 +111,7 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
   }, [screenSharingId, roomId]);
 
   useEffect(() => {
-    console.log({stream})
+    console.log({ stream })
     if (!me) return;
     if (!stream) return;
 

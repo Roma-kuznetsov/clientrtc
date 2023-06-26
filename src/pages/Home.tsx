@@ -1,11 +1,9 @@
-import { FC } from "react";
-import { JoinButton } from "../components/JoinButton";
+import { Join } from "../components/CreateButton";
 
-
-export const Home:FC = () => {
-  return (
-    <div className="App-flex items-center justify-center w-screen h-screen">
-      <JoinButton />
-    </div>
-  );
+export const Home = () => {
+    return (
+        <div className="App flex items-center justify-center w-screen h-screen">
+            <Join />
+        </div>
+    );
 };

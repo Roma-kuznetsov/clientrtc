@@ -1,5 +1,5 @@
-export interface iMessage {
+export interface IMessage {
   content:string;
-  author:string;
-  timestamp:string;
+  author?:string;
+  timestamp:number;
 }

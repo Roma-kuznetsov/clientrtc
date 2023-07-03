@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useReducer, ReactNode } from "react";
+import { createContext, useEffect, useState, useReducer } from "react";
 import socketIOClient from "socket.io-client";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
@@ -7,6 +7,7 @@ import { peersReducer } from "./peerReducer";
 import { addPeerAction, removePeerAction } from "./peerActions";
 
 let WS;
+let PEER_SERVER = { host: "peerjs-production-0a00.up.railway.app", port: 443, secure: true };
 if (process.env.NODE_ENV === 'production') {
     WS = "https://serverrtc-production.up.railway.app/"
 } else {
@@ -64,10 +65,7 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
     useEffect(() => {
         const meId = uuidV4();
 
-        const peer = new Peer(meId, {
-            host: "185.233.187.31",
-            port: 9000,
-        });
+        const peer = new Peer(meId, PEER_SERVER);
         setMe(peer);
 
         try {
@@ -76,8 +74,22 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
                 .then((stream) => {
                     setStream(stream);
                 });
-        } catch (error) {
-            console.error(error);
+        } catch (err: any) {
+            console.log(err); /* handle the error */
+            if (err.name == "NotFoundError" || err.name == "DevicesNotFoundError") {
+                //required track is missing 
+            } else if (err.name == "NotReadableError" || err.name == "TrackStartError") {
+                //webcam or mic are already in use 
+            } else if (err.name == "OverconstrainedError" || err.name == "ConstraintNotSatisfiedError") {
+                //constraints can not be satisfied by avb. devices 
+            } else if (err.name == "NotAllowedError" || err.name == "PermissionDeniedError") {
+                //permission denied in browser 
+            } else if (err.name == "TypeError" || err.name == "TypeError") {
+                //empty constraints object 
+            } else {
+                //other errors 
+
+            }
         }
 
         ws.on("room-created", enterRoom);

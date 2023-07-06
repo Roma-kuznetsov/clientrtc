@@ -10,9 +10,9 @@ import { chatReducer } from "../reducers/chatReducer";
 import { addHistoryAction, addMessageAction, toggleChatAction } from "../reducers/chatActions";
 
 let WS;
-let PEER_SERVER = { host: "peerjs-production-0a00.up.railway.app", port: 443, secure: true };
+let PEER_SERVER = { host: "peerjs-q12f.onrender.com", port: 443, secure: true };
 if (process.env.NODE_ENV === 'production') {
-    WS = "https://serverrtc-production.up.railway.app/"
+    WS = "https://serverrtc.onrender.com"
 } else {
     WS = "http://localhost:8080";
 }

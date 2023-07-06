@@ -4,7 +4,9 @@ import { RoomContext } from "../../context/RoomContext";
 import classNames from "classnames";
 
 export const ChatBubble: FC<{ message?: IMessage, newChat?: boolean }> = ({ message, newChat }) => {
-  const { me } = useContext(RoomContext);
+  const { me, peers } = useContext(RoomContext);
+  const author = message?.author && peers[message?.author]
+  const userName = author?.userName || "Anonimys"
   const isSelf = message?.author === me?.id;
   return (
     <>
@@ -13,10 +15,15 @@ export const ChatBubble: FC<{ message?: IMessage, newChat?: boolean }> = ({ mess
           "pl-10 justify-end": isSelf,
           "pr-10 justify-start": !isSelf
         })}>
-          <div className={classNames("inline-block py-2 px-4 rounded", {
-            "bg-red-200": isSelf,
-            "bg-red-300": !isSelf
-          })} >{message?.content}</div>
+          <div className="flex flex-col">
+            <div className={classNames("inline-block py-2 px-4 rounded", {
+              "bg-red-200": isSelf,
+              "bg-red-300": !isSelf
+            })} >{message?.content}
+            </div>
+            <div>{isSelf ? "You" : userName}</div>
+          </div>
+
         </div>
       }
     </>

@@ -6,14 +6,15 @@ import { PeerState } from "../reducers/peerReducer";
 import { RoomContext } from "../context/RoomContext";
 import { ChatButton } from "../components/ChatButton";
 import { Chat } from "../components/chat/Chat";
+import { Name } from "../common/Name";
 
 export const Room = () => {
     const { id } = useParams();
-    const { ws, me, stream, peers, shareScreen, screenSharingId, setRoomId, toggleChat, chat } =
+    const { ws, me, stream, peers, shareScreen, screenSharingId, setRoomId, toggleChat, chat, userName } =
         useContext(RoomContext);
 
     useEffect(() => {
-        if (me) ws.emit("join-room", { roomId: id, peerId: me._id });
+        if (me) ws.emit("join-room", { roomId: id, peerId: me._id, userName });
     }, [id, me, ws]);
 
     useEffect(() => {
@@ -39,14 +40,20 @@ export const Room = () => {
                         }`}
                 >
                     {screenSharingId !== me?.id && (
-                        <VideoPlayer myVideo={true} stream={stream} />
+                        <div>
+                            <VideoPlayer myVideo={true} stream={stream} />
+                            <Name />
+                        </div>
                     )}
 
                     {Object.values(peersToShow as PeerState).map((peer) => (
-                        <VideoPlayer stream={peer.stream} />
+                        <div>
+                            <VideoPlayer stream={peer.stream} />
+                            <div>{peer.userName}</div>
+                        </div>
                     ))}
                 </div>
-
+                
                 {
                     chat.isChatOpen &&
                     <div className="border pb-28">

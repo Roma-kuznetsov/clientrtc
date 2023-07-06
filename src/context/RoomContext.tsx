@@ -4,19 +4,18 @@ import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
 import { v4 as uuidV4 } from "uuid";
 import { peersReducer } from "../reducers/peerReducer";
-import { addPeerAction, removePeerAction } from "../reducers/peerActions";
+import { addPeerStreamAction, addPeerNameAction, removePeerAction } from "../reducers/peerActions";
 import { IMessage } from "../components/types/chat";
 import { chatReducer } from "../reducers/chatReducer";
 import { addHistoryAction, addMessageAction, toggleChatAction } from "../reducers/chatActions";
 
 let WS;
-let PEER_SERVER = { host: "peerjs-production-0a00.up.railway.app", port: 443, secure: true };
+let PEER_SERVER = { host: "peerjs-q12f.onrender.com", port: 443, secure: true };
 if (process.env.NODE_ENV === 'production') {
-    WS = "https://serverrtc-production.up.railway.app/"
+    WS = "https://serverrtc.onrender.com"
 } else {
     WS = "http://localhost:8080";
 }
-
 export const RoomContext = createContext<null | any>(null);
 
 const ws = socketIOClient(WS);
@@ -28,6 +27,7 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
     const [peers, dispatch] = useReducer(peersReducer, {});
     const [screenSharingId, setScreenSharingId] = useState<string>("");
     const [roomId, setRoomId] = useState<string>();
+    const [userName, setUserName] = useState(localStorage.getItem("userName") || "");
     const [chat, chatDispatch] = useReducer(chatReducer, {
         messages: [],
         isChatOpen: false
@@ -37,6 +37,8 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
         console.log({ roomId });
         navigate(`/room/${roomId}`);
     };
+
+
     const getUsers = ({ participants }: { participants: string[] }) => {
         console.log({ participants });
     };
@@ -87,8 +89,15 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
     const toggleChat = () => {
         chatDispatch(toggleChatAction(!chat.isChatOpen));
     }
+
     useEffect(() => {
-        const meId = uuidV4();
+        localStorage.setItem("userName", userName)
+    }, [userName])
+
+    useEffect(() => {
+        const savedId = localStorage.getItem("userId")
+        const meId = savedId || uuidV4();
+        localStorage.setItem("userId", meId)
 
         const peer = new Peer(meId, PEER_SERVER);
         setMe(peer);
@@ -148,20 +157,29 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
         if (!me) return;
         if (!stream) return;
 
-        ws.on("user-joined", ({ peerId }) => {
-            const call = me.call(peerId, stream);
+        ws.on("user-joined", ({ peerId, userName: name }) => {
+            console.log(peerId, name)
+            debugger
+            dispatch(addPeerNameAction(peerId, name))
+            const call = me.call(peerId, stream, {
+                metadata: {
+                    userName
+                }
+            });
             call.on("stream", (peerStream) => {
-                dispatch(addPeerAction(peerId, peerStream));
+                dispatch(addPeerStreamAction(peerId, peerStream));
             });
         });
 
         me.on("call", (call) => {
+            const  userName  = call.metadata.userName;
+            dispatch(addPeerNameAction(call.peer, userName))
             call.answer(stream);
             call.on("stream", (peerStream) => {
-                dispatch(addPeerAction(call.peer, peerStream));
+                dispatch(addPeerStreamAction(call.peer, peerStream));
             });
         });
-    }, [me, stream]);
+    }, [me, stream, userName]);
 
     console.log({ peers });
 
@@ -178,6 +196,8 @@ export const RoomProvider: React.FC<any> = ({ children }) => {
                 sendMessage,
                 chat,
                 toggleChat,
+                userName,
+                setUserName,
             }}
         >
             {children}
